@@ -1,0 +1,32 @@
+name: 'Create RPM Repository'
+description: 'Create full rpm repository metadata on disk, ready to be served'
+inputs:
+  github_token:
+    default: ${{ github.token }}
+  source:
+    default: ${{ github.repository }}
+  mode:
+    default: write
+  directory:
+    default: .
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      working-directory: ${{ inputs.directory }}
+      run: mkdir -p pool/main
+    - shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+      working-directory: ${{ inputs.directory }}/pool/main
+      run: |
+        cat <<< "${{ inputs.source }}" | tr ',' '\n' | tr ';' '\n' | tr ' ' '\n' | xargs -I '{}' gh api /repos/'{}'/releases --paginate | jq '.[] | .assets[] | select(.name | endswith(".rpm")) | .url' -r | xargs -r wget --header "Authorization: Bearer $GH_TOKEN" --header 'Accept: application/octet-stream' --tries inf --random-wait -nc 2> /dev/null
+    - shell: bash
+      working-directory: ${{ inputs.directory }}
+      run: |
+        if [ "${{ inputs.mode }}" = append ] && [ -d repodata ]; then
+          createrepo_c --update .
+        else
+          rm -rf repodata
+          createrepo_c .
+        fi

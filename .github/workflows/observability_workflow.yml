@@ -1,0 +1,24 @@
+name: OpenTelemetry
+on:
+  workflow_run:
+    workflows:
+      - Claude
+      - CodeQL
+      - Copilot
+      - Copilot cloud agent
+      - Copilot code review
+      - OpenAI Codex
+      - Recompile Agentic Workflows
+    types:
+      - completed
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: plengauer/opentelemetry-github/actions/instrument/workflow@909c7153cce2c6ef916f4fde6958886d9d65af03
+        env:
+          OTEL_EXPORTER_OTLP_ENDPOINT: ${{ secrets.OTEL_EXPORTER_OTLP_ENDPOINT }}
+          OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
+    container: ghcr.io/plengauer/opentelemetry-github-workflow-instrumentation-runner:909c7153cce2c6ef916f4fde6958886d9d65af03
+    permissions:
+      actions: read

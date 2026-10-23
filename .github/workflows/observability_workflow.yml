@@ -2,7 +2,6 @@ name: OpenTelemetry
 on:
   workflow_run:
     workflows:
-      - Agentic Maintenance
       - Analyze
       - Autobackport
       - Autotriage
